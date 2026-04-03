@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wisdom Vault — AI Agent Inheritance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0a14; --card: #12121e; --border: #2a2a3e;
+            --gold: #c9a227; --gold-dim: #8b7019; --gold-glow: rgba(201,162,39,0.08);
+            --success: #22c55e; --error: #ef4444;
+            --text: #e2e8f0; --muted: #6b7280; --code-bg: #080810;
+            --purple: #a78bfa; --blue: #60a5fa; --amber: #f59e0b;
+            --green-dim: rgba(34,197,94,0.08); --red-dim: rgba(239,68,68,0.08);
+            --blue-dim: rgba(96,165,250,0.08); --purple-dim: rgba(167,139,250,0.08);
+            --amber-dim: rgba(245,158,11,0.08);
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+        header { background: linear-gradient(135deg,#12121e,#1a1a2e); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .logo h1 { font-size: 20px; font-weight: 700; color: var(--gold); }
+        .logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .demo-btn { background: var(--gold); color: #000; border: none; padding: 9px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: opacity .2s; }
+        .demo-btn:hover { opacity: .85; } .demo-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .tabs { background: var(--card); border-bottom: 1px solid var(--border); display: flex; padding: 0 32px; overflow-x: auto; }
+        .tab { padding: 12px 18px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all .2s; }
+        .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+        .tab-panel { display: none; } .tab-panel.active { display: block; }
+        main { max-width: 900px; margin: 28px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 16px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color .2s, opacity .3s; }
+        .card.locked { opacity: .3; pointer-events: none; }
+        .card.active { border-color: var(--gold-dim); }
+        .card.done { border-color: #1a3a2a; }
+        .card-header { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .card-icon { font-size: 18px; width: 38px; height: 38px; background: var(--bg); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .card-title { font-size: 14px; font-weight: 600; }
+        .card-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .card-badge { margin-left: auto; font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+        .badge-ai { background: #1a1040; color: var(--purple); border: 1px solid #4c1d95; }
+        .badge-vault { background: #1a1000; color: var(--gold); border: 1px solid var(--gold-dim); }
+        .badge-blocked { background: #2d0a0a; color: var(--error); border: 1px solid #7f1d1d; }
+        .badge-new { background: #0a1a2a; color: var(--blue); border: 1px solid #1e3a5f; }
+        .card-body { padding: 20px 22px; }
+        textarea, input[type="text"] { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; color: var(--text); font-family: inherit; font-size: 13px; resize: vertical; transition: border-color .2s; }
+        textarea:focus, input:focus { outline: none; border-color: var(--gold-dim); }
+        label { display: block; font-size: 11px; font-weight: 500; margin-bottom: 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+        .field { margin-bottom: 14px; }
+        .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; border: none; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--gold); color: #000; }
+        .btn-primary:hover { opacity: .85; } .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--gold-dim); } .btn-outline:disabled { opacity: .4; cursor: not-allowed; }
+        .btn-danger { background: transparent; color: var(--error); border: 1px solid #7f1d1d; }
+        .btn-danger:hover { background: #1a0404; }
+        .btn-blue { background: #1e3a5f; color: var(--blue); border: 1px solid #2a527a; }
+        .btn-blue:hover { background: #2a527a; }
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .result-box { margin-top: 12px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 11px; line-height: 1.7; max-height: 260px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; display: none; }
+        .result-box.show { display: block; }
+        .result-box.ok { border-color: #166534; color: #86efac; }
+        .result-box.err { border-color: #7f1d1d; color: #fca5a5; }
+        .result-box.info { border-color: #1e3a5f; color: #93c5fd; }
+        .advice-box { background: var(--bg); border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; padding: 14px 18px; margin-top: 12px; font-size: 13px; line-height: 1.75; display: none; }
+        .advice-box.show { display: block; }
+        .blocked-box { background: #0d0303; border: 1px solid #7f1d1d; border-radius: 8px; padding: 14px; margin-top: 12px; display: none; }
+        .blocked-box.show { display: block; }
+        .blocked-title { color: var(--error); font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+        .blocked-detail { font-size: 12px; color: #fca5a5; line-height: 1.5; }
+        .info-box { background: #0a0a1f; border: 1px solid #1e3a5f; border-radius: 8px; padding: 10px 13px; font-size: 12px; color: #93c5fd; margin-bottom: 14px; line-height: 1.5; }
+        .patterns-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 9px; margin-top: 12px; }
+        .pattern-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px; }
+        .p-id { font-size: 10px; color: var(--gold); font-weight: 700; font-family: monospace; }
+        .p-title { font-size: 12px; font-weight: 600; margin: 3px 0; }
+        .p-insight { font-size: 11px; color: var(--muted); line-height: 1.5; }
+        .p-meta { display: flex; justify-content: space-between; margin-top: 7px; font-size: 10px; }
+        .p-cat { color: var(--purple); } .p-str { color: var(--success); }
+        .scopes { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+        .scope-pill { padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; font-family: monospace; }
+        .s-granted { background: #052e16; color: var(--success); border: 1px solid #166534; }
+        .s-denied { background: #2d0a0a; color: var(--error); border: 1px solid #7f1d1d; }
+        .token-display { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; font-family: monospace; font-size: 10px; word-break: break-all; color: var(--gold); margin-top: 10px; }
+        .trustee-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .t-status { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+        .t-pending { background: var(--border); color: var(--muted); }
+        .t-confirmed { background: #052e16; color: var(--success); border: 1px solid #166534; }
+        .mode-banner { background: #12100a; border: 1px solid #854d0e; border-radius: 8px; padding: 9px 14px; font-size: 12px; color: #fde047; display: none; align-items: center; gap: 7px; }
+        .mode-banner.show { display: flex; }
+        .spinner { width: 12px; height: 12px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--card); border: 1px solid #7f1d1d; border-radius: 12px; padding: 28px; max-width: 420px; width: 90%; }
+        .modal h2 { color: var(--error); font-size: 16px; margin-bottom: 10px; }
+        .modal p { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+        .modal-cats { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 18px; }
+        .modal-cat { background: #2d0a0a; color: #fca5a5; border: 1px solid #7f1d1d; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .modal-btns { display: flex; gap: 10px; }
+        #lineage-svg { width: 100%; height: 280px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; margin-top: 12px; overflow: visible; }
+        .conflict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+        .conflict-col h4 { font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+        .conflict-col.a h4 { color: var(--blue); }
+        .conflict-col.b h4 { color: var(--purple); }
+
+        /* ── Consent Receipt ─────────────────────────────────────── */
+        .cr { display: none; margin-top: 16px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; animation: fadeUp .4s ease; }
+        .cr.show { display: block; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .cr-bar { height: 3px; background: linear-gradient(90deg,transparent,var(--gold),var(--gold-dim),transparent); overflow:hidden; position:relative; }
+        .cr-bar::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent); animation:shimmer 2.5s ease-in-out infinite; }
+        @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+        .cr-head { padding:14px 18px 12px; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px; background:#0e0e1a; }
+        .cr-title { font-size:13px; font-weight:600; margin-bottom:2px; }
+        .cr-sub { font-size:11px; color:var(--muted); }
+        .cr-stamp { font-size:10px; background:#052e16; color:var(--success); border:1px solid #166534; padding:3px 10px; border-radius:20px; font-weight:700; }
+        .cr-ids { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; padding:12px 18px; border-bottom:1px solid var(--border); }
+        .cr-id-box { background:var(--card); border:1px solid var(--border); border-radius:7px; padding:8px 11px; }
+        .cr-role { font-size:9px; font-family:monospace; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin-bottom:3px; }
+        .cr-id-val { font-family:monospace; font-size:11px; word-break:break-all; }
+        .cr-arr { text-align:center; color:var(--gold); font-size:14px; line-height:1; }
+        .cr-arr small { display:block; font-size:8px; color:var(--muted); margin-top:2px; }
+        .cr-perms { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 18px; border-bottom:1px solid var(--border); }
+        .cr-pg h5 { font-size:9px; font-family:monospace; letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+        .cr-pg.allow h5 { color:var(--success); }
+        .cr-pg.deny h5 { color:var(--error); }
+        .cr-pi { display:flex; align-items:flex-start; gap:7px; padding:7px 9px; border-radius:6px; margin-bottom:5px; font-size:12px; }
+        .cr-pg.allow .cr-pi { background:var(--green-dim); border:1px solid rgba(34,197,94,.12); }
+        .cr-pg.deny .cr-pi { background:var(--red-dim); border:1px solid rgba(239,68,68,.12); }
+        .cr-pi-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+        .cr-pg.allow .cr-pi-dot { background:var(--success); }
+        .cr-pg.deny .cr-pi-dot { background:var(--error); }
+        .cr-pi-lbl { font-weight:600; color:var(--text); display:block; margin-bottom:1px; }
+        .cr-pi-desc { font-size:11px; color:var(--muted); line-height:1.35; }
+        .cr-guar { padding:11px 18px; display:flex; gap:10px; align-items:flex-start; background:linear-gradient(135deg,rgba(201,162,39,.03),transparent); border-bottom:1px solid var(--border); }
+        .cr-seal { width:32px; height:32px; border:1.5px solid var(--gold-dim); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+        .cr-guar-txt { font-size:12px; color:var(--muted); line-height:1.55; }
+        .cr-guar-txt strong { color:var(--text); }
+        .cr-meta-row { padding:9px 18px; display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+        .cr-mk { font-size:9px; font-family:monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); display:block; }
+        .cr-mv { font-family:monospace; font-size:11px; color:var(--muted); }
+        .cr-mv.tok { color:var(--blue); }
+        .cr-stepup-note { margin:0 18px 12px; background:rgba(245,158,11,.06); border:1px solid rgba(245,158,11,.2); border-radius:7px; padding:9px 12px; font-size:12px; color:#fde08a; }
+
+        /* ── Audit Log ───────────────────────────────────────────── */
+        .audit-bar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+        .live-ind { display:flex; align-items:center; gap:5px; font-size:10px; font-family:monospace; letter-spacing:.06em; color:var(--success); }
+        .live-dot { width:7px; height:7px; background:var(--success); border-radius:50%; animation:pdot 1.5s ease-in-out infinite; }
+        @keyframes pdot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.6)} }
+        .af-btns { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+        .f-btn { font-family:monospace; font-size:9px; padding:3px 8px; border-radius:4px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; transition:all .15s; }
+        .f-btn:hover,.f-btn.on { border-color:var(--gold-dim); color:var(--gold); background:var(--gold-glow); }
+        .f-btn.fb:hover,.f-btn.fb.on { border-color:rgba(239,68,68,.3); color:var(--error); background:var(--red-dim); }
+        .f-btn.fi:hover,.f-btn.fi.on { border-color:rgba(34,197,94,.3); color:var(--success); background:var(--green-dim); }
+        .evtbadge { font-family:monospace; font-size:9px; background:#1a1a2e; color:var(--muted); padding:2px 7px; border-radius:9px; border:1px solid var(--border); }
+        .as-row { display:flex; gap:14px; padding:8px 12px; background:#0d0d18; border:1px solid var(--border); border-radius:7px; margin-bottom:8px; flex-wrap:wrap; }
+        .as-item { display:flex; align-items:center; gap:5px; }
+        .as-dot { width:6px; height:6px; border-radius:50%; }
+        .as-lbl { font-size:9px; font-family:monospace; color:var(--muted); letter-spacing:.06em; }
+        .as-num { font-size:12px; font-family:monospace; font-weight:600; }
+        .astream { font-family:'DM Mono',monospace; font-size:11px; line-height:1.9; background:var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; min-height:160px; max-height:460px; overflow-y:auto; }
+        .astream::-webkit-scrollbar { width:3px; }
+        .astream::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+        .ae { display:grid; grid-template-columns:60px 110px 118px 1fr; gap:0 5px; align-items:start; padding:3px 0 3px 8px; border-bottom:1px solid rgba(255,255,255,.025); position:relative; }
+        .ae::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; border-radius:1px; }
+        .ae.ti::before { background:var(--success); }
+        .ae.tb::before { background:var(--error); }
+        .ae.tv::before { background:var(--blue); }
+        .ae.td::before { background:var(--purple); }
+        .ae.ts::before { background:var(--amber); }
+        .ae.tt::before { background:var(--gold); }
+        .ae-t { color:var(--muted); font-size:10px; padding-top:2px; }
+        .aebadge { font-size:9px; padding:1px 5px; border-radius:3px; display:inline-flex; align-items:center; gap:2px; white-space:nowrap; }
+        .ae.ti .aebadge { background:var(--green-dim); color:var(--success); border:1px solid rgba(34,197,94,.18); }
+        .ae.tb .aebadge { background:var(--red-dim); color:var(--error); border:1px solid rgba(239,68,68,.18); }
+        .ae.tv .aebadge { background:var(--blue-dim); color:var(--blue); border:1px solid rgba(96,165,250,.18); }
+        .ae.td .aebadge { background:var(--purple-dim); color:var(--purple); border:1px solid rgba(167,139,250,.18); }
+        .ae.ts .aebadge { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(245,158,11,.18); }
+        .ae.tt .aebadge { background:var(--gold-glow); color:var(--gold); border:1px solid var(--gold-dim); }
+        .ae-actor { font-size:10px; color:var(--muted); padding-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ae-msg { font-size:11px; color:#7788a0; line-height:1.45; }
+        .ae-msg strong { color:var(--text); font-weight:500; }
+        .ae-msg .sc { font-size:9px; padding:1px 4px; border-radius:3px; }
+        .ae-msg .sc.g { color:var(--success); background:var(--green-dim); }
+        .ae-msg .sc.b { color:var(--error); background:var(--red-dim); text-decoration:line-through; }
+        .audit-empty { color:var(--muted); font-size:12px; padding:4px 0; }
+
+        @media(max-width:600px){
+            .conflict-grid,.cr-perms,.cr-ids { grid-template-columns:1fr; }
+            header { padding:12px 14px; } main { padding:0 10px; }
+            .tabs { padding:0 12px; } .card-body,.card-header { padding:12px 14px; }
+            .ae { grid-template-columns:52px 95px 1fr; }
+            .ae-actor { display:none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="modal-overlay" id="stepup-modal">
+    <div class="modal">
+        <h2>🔐 Step-Up Authentication Required</h2>
+        <p>This question touches sensitive topics. In production, Auth0 would trigger MFA here. Confirm your identity to proceed.</p>
+        <div class="modal-cats" id="stepup-cats"></div>
+        <div class="modal-btns">
+            <button class="btn btn-danger" onclick="closeStepUp()">Cancel</button>
+            <button class="btn btn-primary" id="stepup-confirm-btn">Confirm Identity</button>
+        </div>
+    </div>
+</div>
+
+<header>
+    <div class="logo">
+        <h1>🏛️ Wisdom Vault</h1>
+        <p>AI Agent Inheritance · Auth0 Token Vault · Groq AI · Multi-gen Delegation</p>
+    </div>
+    <button class="demo-btn" onclick="runFullDemo()" id="demo-btn">▶ Run Full Demo</button>
+</header>
+
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('main')">🏛️ Inheritance</div>
+    <div class="tab" onclick="switchTab('delegation')">🔗 Delegation</div>
+    <div class="tab" onclick="switchTab('conflict')">⚔️ Conflict</div>
+    <div class="tab" onclick="switchTab('lineage')">🌳 Lineage Tree</div>
+    <div class="tab" onclick="switchTab('github')">🐙 GitHub Import</div>
+    <div class="tab" onclick="switchTab('audit')">📋 Audit Log</div>
+</div>
+
+<!-- TAB 1: INHERITANCE -->
+<div class="tab-panel active" id="tab-main">
+<main>
+    <div class="mode-banner" id="mode-banner">⚡ <strong>Demo mode</strong> — RSA-signed JWTs run locally. Set Auth0 credentials in .env for live mode.</div>
+
+    <div class="card active" id="card-1">
+        <div class="card-header"><div class="card-icon">🧠</div><div><div class="card-title">Extract Wisdom Patterns</div><div class="card-desc">Groq AI distills decisions into anonymous behavioral patterns via the backend. Raw text is never stored.</div></div><span class="card-badge badge-ai">Groq · Llama 3.3</span></div>
+        <div class="card-body">
+            <div class="field"><label>Parent's life decisions (one per line)</label>
+                <textarea id="decisions-input" rows="5">Chose mission-driven startup over $40k higher salary
+Spent six months mentoring junior engineers instead of pursuing promotion
+Sold house to fund the company during a cash crisis rather than lay off the team
+Declined a board seat at a profitable company whose ethics I questioned
+Invested savings in index funds rather than crypto despite peer pressure</textarea>
+            </div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="extractWisdom()" id="btn-extract">🧠 Extract Wisdom</button></div>
+            <div id="patterns-output"></div>
+        </div>
+    </div>
+
+    <div class="card locked" id="card-2">
+        <div class="card-header"><div class="card-icon">🔐</div><div><div class="card-title">Deposit to Auth0 Token Vault</div><div class="card-desc">Anonymised patterns stored. Raw data permanently discarded.</div></div><span class="card-badge badge-vault">Auth0 Token Vault</span></div>
+        <div class="card-body">
+            <div class="field"><label>Parent Identity</label><input type="text" id="parent-id" value="auth0|parent_001"/></div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="depositToVault()" id="btn-deposit">🔐 Deposit to Vault</button></div>
+            <div id="deposit-result" class="result-box"></div>
+        </div>
+    </div>
+
+    <div class="card locked" id="card-3">
+        <div class="card-header"><div class="card-icon">⚖️</div><div><div class="card-title">2-of-3 Trustee Multi-Sig</div><div class="card-desc">Inheritance requires 2 of 3 trustees to confirm.</div></div><span class="card-badge badge-vault">Auth0 Token Vault</span></div>
+        <div class="card-body">
+            <div style="margin-bottom:12px;">
+                <div class="trustee-row"><button class="btn btn-outline" onclick="confirmTrustee(1)" id="btn-t1">✅ Attorney</button><span class="t-status t-pending" id="status-t1">Pending</span></div>
+                <div class="trustee-row"><button class="btn btn-outline" onclick="confirmTrustee(2)" id="btn-t2">✅ Sibling</button><span class="t-status t-pending" id="status-t2">Pending</span></div>
+                <div class="trustee-row" style="opacity:.35;"><button class="btn btn-outline" disabled>✅ Accountant</button><span class="t-status t-pending">Not required (2/3 met)</span></div>
+            </div>
+            <div id="trustee-result" class="result-box"></div>
+        </div>
+    </div>
+
+    <div class="card locked" id="card-4">
+        <div class="card-header"><div class="card-icon">🎫</div><div><div class="card-title">Issue Inheritance Token</div><div class="card-desc">Cryptographically scoped via token-vault-req+jwt.</div></div><span class="card-badge badge-vault">Auth0 Token Vault</span></div>
+        <div class="card-body">
+            <div class="field"><label>Child Identity</label><input type="text" id="child-id" value="auth0|child_002"/></div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="issueToken()" id="btn-issue">🎫 Issue Inheritance Token</button></div>
+            <div id="token-output"></div>
+            <div class="cr" id="cr-main"></div>
+        </div>
+    </div>
+
+    <div class="card locked" id="card-5">
+        <div class="card-header"><div class="card-icon">💬</div><div><div class="card-title">Inherit Wisdom</div><div class="card-desc">Token validates → patterns returned → Groq AI generates advice via the backend.</div></div><span class="card-badge badge-ai">Groq · Llama 3.3</span></div>
+        <div class="card-body">
+            <div class="info-box">💡 Try asking about <strong>death, debt, or grief</strong> to trigger Step-Up Authentication.</div>
+            <div class="field"><label>Question for inherited wisdom</label>
+                <textarea id="question-input" rows="3">I have a job offer for 40% more pay at a company whose mission I don't believe in. Should I take it?</textarea>
+            </div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="queryWisdom()" id="btn-query">💬 Ask for Wisdom</button></div>
+            <div id="advice-output" class="advice-box"></div>
+            <div id="query-meta" class="result-box"></div>
+        </div>
+    </div>
+
+    <div class="card locked" id="card-6">
+        <div class="card-header"><div class="card-icon">🚫</div><div><div class="card-title">Privacy Wall</div><div class="card-desc">Attempt raw data access. Token Vault denies at identity layer — not app code.</div></div><span class="card-badge badge-blocked">Always 403</span></div>
+        <div class="card-body">
+            <div class="btn-row"><button class="btn btn-danger" onclick="attemptRawAccess()" id="btn-raw">⚠️ Attempt Raw Data Access</button></div>
+            <div id="blocked-output" class="blocked-box"><div class="blocked-title">🚫 403 — Token Vault Scope Enforcement</div><div class="blocked-detail" id="blocked-detail"></div></div>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- TAB 2: DELEGATION -->
+<div class="tab-panel" id="tab-delegation">
+<main>
+    <div class="card active">
+        <div class="card-header"><div class="card-icon">🔗</div><div><div class="card-title">Multi-Generational Token Delegation</div><div class="card-desc">Delegate a sub-token to an advisor with narrower scopes. Scopes can only narrow — never expand.</div></div><span class="card-badge badge-new">Feature 2</span></div>
+        <div class="card-body">
+            <div class="info-box">ℹ️ Run the Inheritance flow first. Then delegate a narrowed sub-token to an advisor (e.g. only <code>wisdom:career</code>).</div>
+            <div class="field"><label>Advisor Identity</label><input type="text" id="advisor-id" value="auth0|advisor_003"/></div>
+            <div class="field"><label>Scopes to grant</label>
+                <div id="scope-checkboxes" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+                    <label style="display:flex;align-items:center;gap:5px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);cursor:pointer;"><input type="checkbox" value="wisdom:career" checked> wisdom:career</label>
+                    <label style="display:flex;align-items:center;gap:5px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);cursor:pointer;"><input type="checkbox" value="wisdom:finance"> wisdom:finance</label>
+                    <label style="display:flex;align-items:center;gap:5px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);cursor:pointer;"><input type="checkbox" value="wisdom:relationships"> wisdom:relationships</label>
+                    <label style="display:flex;align-items:center;gap:5px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);cursor:pointer;"><input type="checkbox" value="wisdom:values"> wisdom:values</label>
+                    <label style="display:flex;align-items:center;gap:5px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);cursor:pointer;"><input type="checkbox" value="wisdom:read"> wisdom:read (all)</label>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="delegateToken()" id="btn-delegate">🔗 Issue Delegation Token</button>
+                <button class="btn btn-outline" onclick="queryWithDelegation()" id="btn-delegate-query" disabled>💬 Query as Advisor</button>
+            </div>
+            <div id="delegation-result" class="result-box"></div>
+            <div class="cr" id="cr-delegation"></div>
+            <div id="delegation-advice" class="advice-box"></div>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- TAB 3: CONFLICT -->
+<div class="tab-panel" id="tab-conflict">
+<main>
+    <div class="card active">
+        <div class="card-header"><div class="card-icon">⚔️</div><div><div class="card-title">Wisdom Conflict Resolution</div><div class="card-desc">Two parents with conflicting values. Claude arbitrates and synthesises.</div></div><span class="card-badge badge-new">Feature 3</span></div>
+        <div class="card-body">
+            <div class="info-box">ℹ️ Seeds a second parent vault (stability-first, pragmatic) and pits it against the primary parent (mission-driven).</div>
+            <div class="btn-row" style="margin-bottom:14px;"><button class="btn btn-blue" onclick="seedConflictParent()" id="btn-seed-conflict">🌱 Seed Second Parent Vault</button></div>
+            <div id="conflict-seed-result" class="result-box"></div>
+            <div class="field" style="margin-top:14px;"><label>Conflict Question</label>
+                <textarea id="conflict-question" rows="3">Should I prioritize financial security and family stability, or follow a risky passion project that could change my career but threatens our savings?</textarea>
+            </div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="resolveConflict()" id="btn-resolve" disabled>⚔️ Arbitrate with Claude</button></div>
+            <div class="conflict-grid" id="conflict-patterns" style="display:none;">
+                <div class="conflict-col a"><h4>Parent A — Mission-driven</h4><div id="conflict-patterns-a"></div></div>
+                <div class="conflict-col b"><h4>Parent B — Stability-first</h4><div id="conflict-patterns-b"></div></div>
+            </div>
+            <div id="conflict-advice" class="advice-box" style="border-left-color:var(--purple);"></div>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- TAB 4: LINEAGE -->
+<div class="tab-panel" id="tab-lineage">
+<main>
+    <div class="card active">
+        <div class="card-header"><div class="card-icon">🌳</div><div><div class="card-title">Token Lineage Tree</div><div class="card-desc">Live visualization of the delegation chain with scopes on each edge.</div></div><span class="card-badge badge-new">Feature 4</span></div>
+        <div class="card-body">
+            <div class="btn-row" style="margin-bottom:12px;"><button class="btn btn-blue" onclick="refreshLineage()" id="btn-lineage">🌳 Refresh Tree</button></div>
+            <svg id="lineage-svg" viewBox="0 0 760 280"></svg>
+            <div style="margin-top:10px;font-size:11px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;">
+                <span style="color:#8b7019;">⬛ Parent</span><span style="color:var(--success);">⬛ Child (full scopes)</span><span style="color:var(--blue);">⬛ Advisor (narrowed)</span>
+            </div>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- TAB 5: GITHUB -->
+<div class="tab-panel" id="tab-github">
+<main>
+    <div class="card active">
+        <div class="card-header"><div class="card-icon">🐙</div><div><div class="card-title">Import Wisdom from GitHub</div><div class="card-desc">GitHub OAuth token stored in Token Vault. Commit history drives AI wisdom extraction.</div></div><span class="card-badge badge-new">Feature 5</span></div>
+        <div class="card-body">
+            <div class="info-box">ℹ️ Your GitHub token is stored in Token Vault — never logged or returned. The server fetches your public commit history for Claude to distill.</div>
+            <div class="field"><label>GitHub Username</label><input type="text" id="gh-username" placeholder="e.g. torvalds"/></div>
+            <div class="field"><label>GitHub Personal Access Token (optional — for private events)</label><input type="text" id="gh-token" placeholder="ghp_..."/></div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="importFromGitHub()" id="btn-github">🐙 Import Commits</button></div>
+            <div id="github-result" class="result-box"></div>
+            <div id="github-patterns-output"></div>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- TAB 6: AUDIT LOG — fully native -->
+<div class="tab-panel" id="tab-audit">
+<main>
+    <div class="card active">
+        <div class="card-header">
+            <div class="card-icon">📋</div>
+            <div><div class="card-title">Token Vault Event Stream</div><div class="card-desc">Real-time feed of every token event — issuance, scope checks, delegation, and blocks.</div></div>
+            <span class="card-badge badge-vault">Auth0 Token Vault</span>
+        </div>
+        <div class="card-body">
+            <div class="audit-bar">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <div class="live-ind"><div class="live-dot"></div>LIVE</div>
+                    <div class="btn-row">
+                        <button class="btn btn-blue" style="font-size:11px;padding:5px 11px;" onclick="refreshAudit()">↺ Refresh</button>
+                        <button class="btn btn-outline" style="font-size:11px;padding:5px 11px;" onclick="startAuditPoll()" id="btn-audit-poll">▶ Auto</button>
+                        <button class="btn btn-outline" style="font-size:11px;padding:5px 11px;display:none;" onclick="stopAuditPoll()" id="btn-audit-stop">⏹ Stop</button>
+                        <button class="btn btn-outline" style="font-size:11px;padding:5px 11px;" onclick="simulateAudit()">⚡ Simulate</button>
+                    </div>
+                </div>
+                <div class="af-btns">
+                    <button class="f-btn on" onclick="setAuditFilter('all',this)">ALL</button>
+                    <button class="f-btn fi" onclick="setAuditFilter('issue',this)">ISSUED</button>
+                    <button class="f-btn fb" onclick="setAuditFilter('block',this)">BLOCKED</button>
+                    <span class="evtbadge" id="audit-count">0 events</span>
+                    <button class="f-btn" style="color:var(--error);border-color:rgba(239,68,68,.25);" onclick="AL.clear()">✕</button>
+                </div>
+            </div>
+            <div class="as-row">
+                <div class="as-item"><div class="as-dot" style="background:var(--success)"></div><div class="as-lbl">ISSUED</div><div class="as-num" id="asn-issue" style="color:var(--success)">0</div></div>
+                <div class="as-item"><div class="as-dot" style="background:var(--error)"></div><div class="as-lbl">BLOCKED</div><div class="as-num" id="asn-block" style="color:var(--error)">0</div></div>
+                <div class="as-item"><div class="as-dot" style="background:var(--blue)"></div><div class="as-lbl">VALIDATED</div><div class="as-num" id="asn-validate" style="color:var(--blue)">0</div></div>
+                <div class="as-item"><div class="as-dot" style="background:var(--purple)"></div><div class="as-lbl">DELEGATED</div><div class="as-num" id="asn-delegate" style="color:var(--purple)">0</div></div>
+                <div class="as-item"><div class="as-dot" style="background:var(--amber)"></div><div class="as-lbl">STEP-UP</div><div class="as-num" id="asn-stepup" style="color:var(--amber)">0</div></div>
+                <div class="as-item"><div class="as-dot" style="background:var(--gold)"></div><div class="as-lbl">TRUSTEE</div><div class="as-num" id="asn-trustee" style="color:var(--gold)">0</div></div>
+            </div>
+            <div class="astream" id="astream">
+                <div class="audit-empty">Run any action or click ⚡ Simulate to see Token Vault events…</div>
+            </div>
+        </div>
+    </div>
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const state = { patterns:null, parentId:null, token:null, tokenB:null, delegationToken:null, t1done:false, t2done:false };
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIT LOG — fully in-memory, native
+// ═══════════════════════════════════════════════════════════════
+const AL = (() => {
+    let evts=[], stats={issue:0,block:0,validate:0,delegate:0,stepup:0,trustee:0}, filt='all';
+    const T={ issue:{i:'✦',l:'TOKEN ISSUED'}, block:{i:'✕',l:'BLOCKED'}, validate:{i:'✓',l:'VALIDATED'}, delegate:{i:'⇢',l:'DELEGATED'}, stepup:{i:'⚑',l:'STEP-UP'}, trustee:{i:'⚿',l:'TRUSTEE'} };
+    const cls={ issue:'ti', block:'tb', validate:'tv', delegate:'td', stepup:'ts', trustee:'tt' };
+    const ts=()=>new Date().toLocaleTimeString('en-US',{hour12:false});
+    const sid=id=>(id||'—').replace('auth0|','').substring(0,14);
+    const hl=msg=>msg.replace(/wisdom:\w+/g,m=>`<span class="sc g">${m}</span>`).replace(/raw_data:\w+|personal_history:\w+/g,m=>`<span class="sc b">${m}</span>`).replace(/"([^"]{3,40})"/g,'<strong>$1</strong>');
+
+    function updStats(){
+        Object.keys(stats).forEach(k=>{const e=document.getElementById(`asn-${k}`);if(e)e.textContent=stats[k];});
+        const c=document.getElementById('audit-count');if(c)c.textContent=`${evts.length} event${evts.length!==1?'s':''}`;
+    }
+    function render(){
+        const s=document.getElementById('astream');if(!s)return;
+        const f=filt==='all'?evts:evts.filter(e=>e.type===filt);
+        if(!f.length){s.innerHTML=`<div class="audit-empty">${evts.length===0?'Run any action or click ⚡ Simulate to see Token Vault events…':'No events match this filter.'}</div>`;return;}
+        s.innerHTML=f.map(e=>{const m=T[e.type]||{i:'•',l:e.type.toUpperCase()};return`<div class="ae ${cls[e.type]||'tv'}"><div class="ae-t">${e.ts}</div><div><span class="aebadge">${m.i} ${m.l}</span></div><div class="ae-actor" title="${e.actor}">${sid(e.actor)}</div><div class="ae-msg">${hl(e.msg)}</div></div>`;}).join('');
+        s.scrollTop=s.scrollHeight;
+    }
+    return {
+        log(type,actor,msg){ evts.push({type,actor,msg,ts:ts()}); if(stats[type]!==undefined)stats[type]++; if(evts.length>300)evts=evts.slice(-300); updStats(); render(); },
+        setFilter(f){ filt=f; render(); },
+        clear(){ evts=[]; stats={issue:0,block:0,validate:0,delegate:0,stepup:0,trustee:0}; updStats(); render(); },
+        fromServer(entries){ entries.forEach(e=>{const m={'TOKEN ISSUED':'issue','DELEGATION':'delegate','SCOPE CHECK':'validate','RAW ACCESS ATTEMPT':'block','STEP-UP TRIGGERED':'stepup','TRUSTEE CONFIRMED':'trustee','VAULT DEPOSIT':'issue'};const t=m[e.event]||'validate';evts.push({type:t,actor:e.actor,msg:`${e.detail} — <strong>${e.outcome.toUpperCase()}</strong>`,ts:e.ts});if(stats[t]!==undefined)stats[t]++;});if(evts.length>300)evts=evts.slice(-300);updStats();render();}
+    };
+})();
+window.AL = AL;
+
+function setAuditFilter(f,btn){document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');AL.setFilter(f);}
+let _auditTimer=null;
+function startAuditPoll(){document.getElementById('btn-audit-poll').style.display='none';document.getElementById('btn-audit-stop').style.display='';_auditTimer=setInterval(refreshAudit,1500);refreshAudit();}
+function stopAuditPoll(){clearInterval(_auditTimer);_auditTimer=null;document.getElementById('btn-audit-poll').style.display='';document.getElementById('btn-audit-stop').style.display='none';}
+async function refreshAudit(){try{const r=await fetch('/audit/log');const d=await r.json();if(d.log?.length)AL.fromServer(d.log);}catch{}}
+async function simulateAudit(){
+    AL.clear(); const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    AL.log('trustee','auth0|trustee_attorney_001','"Attorney" confirmed death — 1 of 2 required'); await wait(480);
+    AL.log('trustee','auth0|trustee_sibling_002','"Sibling" confirmed — 2/2 threshold met. Inheritance unlocked.'); await wait(560);
+    AL.log('issue','auth0|parent_001','Inheritance token issued to child_002 — scopes: wisdom:read wisdom:career wisdom:finance wisdom:values wisdom:risk'); await wait(480);
+    AL.log('validate','auth0|child_002','Token validated — wisdom:read scope check passed. 5 patterns returned.'); await wait(640);
+    AL.log('block','auth0|child_002','raw_data:access DENIED — scope explicitly blocked at token issuance. Auth0 Token Vault identity layer.'); await wait(480);
+    AL.log('delegate','auth0|child_002','Sub-token delegated to advisor_003 — narrowed to wisdom:career. wisdom:finance, wisdom:relationships denied.'); await wait(560);
+    AL.log('validate','auth0|advisor_003','Advisor token validated — wisdom:career check passed. Delegation depth: 1/2.'); await wait(480);
+    AL.log('stepup','auth0|child_002','Step-up authentication triggered — query contains keyword "debt". Awaiting MFA confirmation.'); await wait(720);
+    AL.log('validate','auth0|child_002','Step-up confirmed — sensitive query allowed. Finance patterns returned under wisdom:finance.'); await wait(400);
+    AL.log('block','auth0|advisor_003','personal_history:read DENIED — advisor token does not carry this scope. Narrowing enforced.');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONSENT RECEIPT
+// ═══════════════════════════════════════════════════════════════
+const SCOPE_META={
+    'wisdom:read':{l:'Full Wisdom Access',d:'All patterns, values, and decision frameworks',i:'🧠'},
+    'wisdom:career':{l:'Career Guidance',d:'Work ethic, professional decisions, career values',i:'💼'},
+    'wisdom:finance':{l:'Financial Patterns',d:'Investment philosophy and financial decision-making',i:'📊'},
+    'wisdom:relationships':{l:'Relationship Values',d:'How they approached family, friendship, partnership',i:'🤝'},
+    'wisdom:values':{l:'Core Values',d:'Ethical principles, moral reasoning, life philosophy',i:'⚖️'},
+    'wisdom:risk':{l:'Risk Tolerance',d:'How they evaluated uncertainty and bold decisions',i:'🎯'},
+};
+const DENIED_ALWAYS=[
+    {l:'Raw Personal Data',d:'Emails, messages, private notes, documents',i:'✉️'},
+    {l:'Personal History',d:'Specific events, dates, names, biographical details',i:'📋'},
+    {l:'Financial Records',d:'Bank accounts, transactions, asset details',i:'🏦'},
+    {l:'Medical Information',d:'Health records, diagnoses, medical history',i:'🏥'},
+];
+
+function renderCR(id, data){
+    const el=document.getElementById(id); if(!el) return;
+    const isDel=!!data.delegated_from;
+    const parentId=data.parent_id||data.inherited_from||state.parentId||'auth0|parent_001';
+    const childId=data.issued_to||data.child_id||data.delegate_to||document.getElementById('child-id')?.value||'auth0|child_002';
+    const granted=(data.scopes_granted||data.scopes||[]).filter(s=>s.startsWith('wisdom:'));
+    const tokPrev=(data.inheritance_token||data.delegation_token||'').substring(0,32)+'…';
+    const depth=data.delegation_depth||0;
+    const exp=data.expires_in?Math.round(data.expires_in/3600)+'h':'24h';
+    const now=new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    const gHtml=granted.length?granted.map(s=>{const m=SCOPE_META[s]||{l:s,d:'Custom scope',i:'•'};return`<div class="cr-pi"><div class="cr-pi-dot"></div><div><span class="cr-pi-lbl">${m.i} ${m.l}</span><span class="cr-pi-desc">${m.d}</span></div></div>`;}).join(''):'<div class="cr-pi"><div class="cr-pi-dot"></div><div><span class="cr-pi-lbl">No wisdom scopes</span></div></div>';
+    const dHtml=DENIED_ALWAYS.map(d=>`<div class="cr-pi"><div class="cr-pi-dot"></div><div><span class="cr-pi-lbl">${d.i} ${d.l}</span><span class="cr-pi-desc">${d.d}</span></div></div>`).join('');
+
+    el.innerHTML=`
+        <div class="cr-bar"></div>
+        <div class="cr-head">
+            <div><div class="cr-title">🧾 ${isDel?'Delegation':'Inheritance'} Consent Receipt</div><div class="cr-sub">${isDel?'Sub-token issued — scopes narrowed from parent grant':'Cryptographic inheritance authorized by 2-of-3 trustee confirmation'}</div></div>
+            <div class="cr-stamp">✓ Auth0 Token Vault</div>
+        </div>
+        <div class="cr-ids">
+            <div class="cr-id-box"><div class="cr-role">${isDel?'Issuer (Child)':'Parent'}</div><div class="cr-id-val">${isDel?(data.delegated_from||childId):parentId}</div></div>
+            <div class="cr-arr">→<small>GRANTS</small>${depth>0?`<small>depth ${depth}</small>`:''}</div>
+            <div class="cr-id-box"><div class="cr-role">${isDel?'Advisor':'Child'}</div><div class="cr-id-val">${childId}</div></div>
+        </div>
+        <div class="cr-perms">
+            <div class="cr-pg allow"><h5>✓ Can Access</h5>${gHtml}</div>
+            <div class="cr-pg deny"><h5>✕ Forever Blocked</h5>${dHtml}</div>
+        </div>
+        <div class="cr-guar">
+            <div class="cr-seal">🔐</div>
+            <div class="cr-guar-txt">The "Forever Blocked" list is <strong>not enforced by application code</strong> — it is baked into the token at issuance by <strong>Auth0 Token Vault</strong> using RSA-signed JWTs with explicit <code style="background:#1a1a2e;padding:1px 5px;border-radius:3px;font-size:10px;">denied_scopes</code>. No server modification can grant access to blocked data. Enforcement lives at the <strong>identity layer</strong>.</div>
+        </div>
+        ${depth===0?`<div class="cr-stepup-note"><strong>🔔 Step-Up Authentication active.</strong> Sensitive topics (grief, debt, mental health) trigger additional confirmation before patterns are returned — even with a valid token.</div>`:''}
+        <div class="cr-meta-row">
+            <div><span class="cr-mk">Token</span><span class="cr-mv tok">${tokPrev}</span></div>
+            <div><span class="cr-mk">Issued</span><span class="cr-mv">${now}</span></div>
+            <div><span class="cr-mk">Expires</span><span class="cr-mv">${exp}</span></div>
+            <div><span class="cr-mk">Depth</span><span class="cr-mv">${depth}/2</span></div>
+            <div><span class="cr-mk">Mode</span><span class="cr-mv">${data.mode||'demo'}</span></div>
+        </div>
+    `;
+    el.classList.add('show');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+const api=(path,body)=>fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json().then(d=>({ok:r.ok,status:r.status,data:d})));
+const apiGet=path=>fetch(path).then(r=>r.json().then(d=>({ok:r.ok,data:d})));
+function setLoading(id,on,label){const el=document.getElementById(id);if(!el)return;el.disabled=on;el.innerHTML=on?`<span class="spinner"></span> Working…`:label;}
+function showResult(id,content,type){const el=document.getElementById(id);if(!el)return;el.className=`result-box show ${type}`;el.textContent=typeof content==='string'?content:JSON.stringify(content,null,2);}
+function unlock(n){const c=document.getElementById(`card-${n}`);if(c){c.classList.remove('locked');c.classList.add('active');}setTimeout(()=>c?.scrollIntoView({behavior:'smooth',block:'nearest'}),100);}
+function complete(n){const c=document.getElementById(`card-${n}`);if(c){c.classList.remove('active');c.classList.add('done');}}
+function parsePatterns(text){try{const p=JSON.parse(text);return Array.isArray(p)?p:p.patterns??p.wisdom_patterns??null;}catch{}const m=text.match(/\[[\s\S]*?\]/);if(m)try{return JSON.parse(m[0]);}catch{}const o=text.match(/\{[\s\S]*\}/);if(o)try{const obj=JSON.parse(o[0]);return obj.patterns??Object.values(obj).find(v=>Array.isArray(v));}catch{}return null;}
+function renderPatterns(patterns,cid='patterns-output'){document.getElementById(cid).innerHTML=`<div style="margin-top:10px;font-size:11px;color:var(--muted);">${patterns.length} patterns extracted — raw decisions discarded ✓</div><div class="patterns-grid">${patterns.map(p=>`<div class="pattern-card"><div class="p-id">${p.id}</div><div class="p-title">${p.principle}</div><div class="p-insight">${p.insight}</div><div class="p-meta"><span class="p-cat">${p.category}</span><span class="p-str">↑${p.strength}</span></div></div>`).join('')}</div>`;}
+function switchTab(name){document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['main','delegation','conflict','lineage','github','audit'][i]===name));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(`tab-${name}`).classList.add('active');if(name==='lineage')refreshLineage();if(name==='audit')refreshAudit();}
+async function aiChat(prompt){const r=await fetch('/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});const d=await r.json();if(!r.ok){if(r.status===503)throw new Error('AI not configured — add GROQ_API_KEY in Railway → Variables.');throw new Error(d.error||'AI request failed');}return d.text;}
+async function init(){try{const r=await fetch('/health');const d=await r.json();if(d.mode==='demo')document.getElementById('mode-banner').classList.add('show');}catch{}}
+
+// ═══════════════════════════════════════════════════════════════
+// FLOW STEPS
+// ═══════════════════════════════════════════════════════════════
+async function extractWisdom(decisions=null){
+    const raw=decisions||document.getElementById('decisions-input').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    if(!raw.length)return;
+    setLoading('btn-extract',true); document.getElementById('patterns-output').innerHTML='';
+    AL.log('validate','browser',`Wisdom extraction started — ${raw.length} decisions submitted to Groq AI`);
+    try{
+        const r=await api('/parent/extract-wisdom',{decisions:raw});
+        if(!r.ok)throw new Error(r.data.error||'Extraction failed');
+        const patterns=r.data.patterns;
+        if(!patterns?.length)throw new Error('AI returned no patterns — try rephrasing your decisions.');
+        state.patterns=patterns; renderPatterns(state.patterns); complete(1); unlock(2);
+        AL.log('issue','groq-ai',`${patterns.length} wisdom patterns extracted — raw decisions discarded. No personal data retained.`);
+    }catch(err){
+        document.getElementById('patterns-output').innerHTML=`<div style="color:var(--error);font-size:12px;margin-top:8px;padding:10px;background:#0d0303;border:1px solid #7f1d1d;border-radius:8px;">⚠️ ${err.message||'AI error'}</div>`;
+        AL.log('block','groq-ai',`Wisdom extraction failed: ${err.message}`);
+    }
+    setLoading('btn-extract',false,'🧠 Extract Wisdom');
+}
+
+async function depositToVault(){
+    state.parentId=document.getElementById('parent-id').value.trim();
+    if(!state.parentId||!state.patterns)return;
+    setLoading('btn-deposit',true);
+    const r=await api('/vault/deposit',{user_id:state.parentId,wisdom_patterns:state.patterns});
+    showResult('deposit-result',r.data,r.ok?'ok':'err');
+    if(r.ok){complete(2);unlock(3);AL.log('issue',state.parentId,`Vault deposit: ${state.patterns.length} patterns stored. Scopes restricted to wisdom:read family only.`);}
+    else AL.log('block',state.parentId,'Vault deposit failed: '+(r.data.error||'unknown'));
+    setLoading('btn-deposit',false,'🔐 Deposit to Vault');
+}
+
+const TRUSTEES=[{id:1,trusteeId:'trustee_attorney_001',token:'sig_atty_xk29',label:'✅ Attorney'},{id:2,trusteeId:'trustee_sibling_002',token:'sig_sib_mq47',label:'✅ Sibling'}];
+async function confirmTrustee(n){
+    const t=TRUSTEES[n-1]; setLoading(`btn-t${n}`,true);
+    const r=await api('/vault/trustee-confirm',{user_id:state.parentId,trustee_id:t.trusteeId,confirmation_token:t.token});
+    if(r.ok){n===1?(state.t1done=true):(state.t2done=true);const s=document.getElementById(`status-t${n}`);s.className='t-status t-confirmed';s.textContent='✓ Confirmed';showResult('trustee-result',r.data,'ok');AL.log('trustee',t.trusteeId,`Confirmation recorded — ${r.data.confirmations}/${r.data.threshold_met?'2 ✓ THRESHOLD MET':'2 pending'}`);if(state.t1done&&state.t2done){complete(3);unlock(4);}}
+    else{showResult('trustee-result',r.data,'err');AL.log('block',t.trusteeId,'Trustee confirmation failed');}
+    setLoading(`btn-t${n}`,false,t.label);
+}
+
+async function issueToken(){
+    const childId=document.getElementById('child-id').value.trim(); if(!childId)return;
+    setLoading('btn-issue',true);
+    const r=await api('/vault/issue-inheritance-token',{parent_id:state.parentId,child_id:childId});
+    if(r.ok){
+        state.token=r.data.inheritance_token;
+        const granted=r.data.scopes||['wisdom:read']; const denied=r.data.denied_scopes||['raw_data:access'];
+        document.getElementById('token-output').innerHTML=`<div class="scopes">${granted.map(s=>`<span class="scope-pill s-granted">✓ ${s}</span>`).join('')}${denied.map(s=>`<span class="scope-pill s-denied">✗ ${s}</span>`).join('')}</div><div class="token-display">${state.token.substring(0,160)}…</div><div style="font-size:10px;color:var(--muted);margin-top:6px;">mode: ${r.data.mode} · expires in ${r.data.expires_in}s</div>`;
+        renderCR('cr-main',{...r.data,parent_id:state.parentId,issued_to:childId});
+        complete(4); unlock(5); refreshLineage();
+        AL.log('issue',state.parentId,`Inheritance token issued to "${childId}" — granted: ${granted.join(', ')} | denied: ${denied.join(', ')}`);
+    }else{showResult('token-output',r.data,'err');AL.log('block',state.parentId,'Token issuance failed: '+(r.data.error||'error'));}
+    setLoading('btn-issue',false,'🎫 Issue Inheritance Token');
+}
+
+async function queryWisdom(stepUpConfirmed=false){
+    const question=document.getElementById('question-input').value.trim(); if(!question||!state.token)return;
+    setLoading('btn-query',true); document.getElementById('advice-output').className='advice-box'; document.getElementById('query-meta').className='result-box';
+    const r=await api('/child/fetch-patterns',{inheritance_token:state.token,question,step_up_confirmed:stepUpConfirmed});
+    if(r.status===403&&r.data.step_up_required){AL.log('stepup','auth0|child_002',`Step-up triggered — sensitive categories: ${(r.data.categories||[]).join(', ')}`);setLoading('btn-query',false,'💬 Ask for Wisdom');showStepUpModal(r.data.categories,()=>queryWisdom(true));return;}
+    if(!r.ok){showResult('query-meta',r.data,'err');AL.log('block','auth0|child_002','Pattern fetch failed: '+(r.data.error||'error'));setLoading('btn-query',false,'💬 Ask for Wisdom');return;}
+    AL.log('validate','auth0|child_002',`wisdom:read validated — ${(r.data.patterns||[]).length} patterns returned to child agent`);
+    const prompt=`You are channeling a parent's inherited wisdom to their child. You have access ONLY to these anonymised behavioral patterns — nothing else.\n\nPatterns:\n${JSON.stringify(r.data.patterns,null,2)}\n\nQuestion: "${question}"\n\nRULES:\n1. If the question is genuinely addressed by one or more patterns, answer warmly and cite the pattern IDs (e.g. "wp_001 suggests…"). Keep it to 2-3 paragraphs.\n2. If the question has NO meaningful connection to any pattern (e.g. trivia, science, unrelated topics), respond with exactly: "This question falls outside the wisdom I inherited. I can only speak to what my parent's patterns address: ${r.data.patterns.map(p=>p.category).filter((v,i,a)=>a.indexOf(v)===i).join(', ')}." Do not attempt to connect unrelated questions to the patterns.`;
+    try{const text=await aiChat(prompt);const box=document.getElementById('advice-output');box.textContent=text;box.classList.add('show');showResult('query-meta',{patterns_consulted:r.data.patterns.map(p=>p.id),scope_used:r.data.scope_used,raw_data_accessible:false},'info');complete(5);unlock(6);}
+    catch(err){showResult('query-meta',`AI error: ${err.message}`,'err');AL.log('block','groq-ai','Wisdom query AI failed: '+err.message);}
+    setLoading('btn-query',false,'💬 Ask for Wisdom');
+}
+
+async function attemptRawAccess(){
+    if(!state.token)return; setLoading('btn-raw',true);
+    const r=await api('/child/attempt-raw-access',{inheritance_token:state.token});
+    document.getElementById('blocked-detail').textContent=r.data.detail||JSON.stringify(r.data,null,2);
+    document.getElementById('blocked-output').classList.add('show');
+    AL.log('block','auth0|child_002','raw_data:access DENIED — scope explicitly blocked at token issuance. Auth0 Token Vault identity layer. No application code change can bypass this.');
+    complete(6); setLoading('btn-raw',false,'⚠️ Attempt Raw Data Access');
+}
+
+let _stepUpCB=null;
+function showStepUpModal(categories,onConfirm){_stepUpCB=onConfirm;document.getElementById('stepup-cats').innerHTML=categories.map(c=>`<span class="modal-cat">${c}</span>`).join('');document.getElementById('stepup-modal').classList.add('show');document.getElementById('stepup-confirm-btn').onclick=()=>{AL.log('stepup','auth0|child_002','Step-up MFA confirmed by user — proceeding with sensitive query');closeStepUp();onConfirm();};}
+function closeStepUp(){document.getElementById('stepup-modal').classList.remove('show');}
+
+async function delegateToken(){
+    if(!state.token){alert('Complete the Inheritance flow (Tab 1) first.');return;}
+    const advisorId=document.getElementById('advisor-id').value.trim();
+    const checked=[...document.querySelectorAll('#scope-checkboxes input:checked')].map(el=>el.value);
+    if(!checked.length){alert('Select at least one scope.');return;}
+    setLoading('btn-delegate',true);
+    const r=await api('/vault/delegate-token',{issuer_token:state.token,delegate_to:advisorId,requested_scopes:checked});
+    if(r.ok){
+        state.delegationToken=r.data.delegation_token;
+        showResult('delegation-result',{token:state.delegationToken.substring(0,80)+'…',scopes_granted:r.data.scopes,scopes_denied:r.data.denied_scopes,depth:r.data.depth},'ok');
+        renderCR('cr-delegation',{...r.data,delegated_from:document.getElementById('child-id')?.value,delegate_to:advisorId});
+        document.getElementById('btn-delegate-query').disabled=false; refreshLineage();
+        AL.log('delegate',state.parentId,`Sub-token delegated to "${advisorId}" — narrowed to: ${(r.data.scopes||[]).join(', ')}. Denied: ${(r.data.denied_scopes||[]).join(', ')}. Depth: ${r.data.depth}/2`);
+    }else{showResult('delegation-result',r.data,'err');AL.log('block',advisorId,'Delegation blocked: '+(r.data.error||r.data.detail||'error'));}
+    setLoading('btn-delegate',false,'🔗 Issue Delegation Token');
+}
+
+async function queryWithDelegation(){
+    if(!state.delegationToken)return; setLoading('btn-delegate-query',true);
+    const r=await api('/child/fetch-patterns',{inheritance_token:state.delegationToken,step_up_confirmed:true});
+    if(!r.ok){showResult('delegation-result',r.data,'err');AL.log('block','advisor','Advisor fetch failed');setLoading('btn-delegate-query',false,'💬 Query as Advisor');return;}
+    AL.log('validate','auth0|advisor_003',`Advisor token validated — ${(r.data.scope_used||[]).join(', ')} scope. ${(r.data.patterns||[]).length} patterns returned. Delegation depth: ${r.data.delegation_depth||1}/2`);
+    const prompt=`You are a career advisor with inherited wisdom.\nYou have access ONLY to these scoped patterns (narrowed from full inheritance — note the limited scope):\n${JSON.stringify(r.data.patterns,null,2)}\nScope granted: ${JSON.stringify(r.data.scope_used)}\nExplain what advice you can offer and explicitly note what topics are outside your granted scope. 2 paragraphs.`;
+    try{const text=await aiChat(prompt);const box=document.getElementById('delegation-advice');box.textContent=text;box.classList.add('show');}
+    catch(err){showResult('delegation-result',`AI error: ${err.message}`,'err');}
+    setLoading('btn-delegate-query',false,'💬 Query as Advisor');
+}
+
+async function seedConflictParent(){
+    setLoading('btn-seed-conflict',true); document.getElementById('conflict-seed-result').className='result-box';
+    const parentB='auth0|parent_conflict_002';
+    const prompt=`Generate exactly 5 wisdom patterns for a parent whose core values are stability, family presence, and pragmatism — values that create genuine tension with mission-driven idealism.\nPRIVACY — no names, companies, or identifying details.\nReturn ONLY a JSON array, no other text. Each item:\n{"id":"cp_001","principle":"2-6 word title","insight":"1-2 sentence wisdom","category":"career|relationships|finance|values|risk","strength":0.0}`;
+    let conflictPatterns;
+    try{const text=await aiChat(prompt);conflictPatterns=parsePatterns(text);if(!conflictPatterns?.length)throw new Error('parse failed');}
+    catch(err){showResult('conflict-seed-result',`Could not generate conflict patterns: ${err.message||'AI error'}.`,'err');setLoading('btn-seed-conflict',false,'🌱 Seed Second Parent Vault');return;}
+    await api('/vault/deposit',{user_id:parentB,wisdom_patterns:conflictPatterns});
+    await api('/vault/trustee-confirm',{user_id:parentB,trustee_id:'trustee_friend_003',confirmation_token:'sig_frnd_ab12'});
+    await api('/vault/trustee-confirm',{user_id:parentB,trustee_id:'trustee_doctor_004',confirmation_token:'sig_doc_cd34'});
+    const tokenB=await api('/vault/issue-inheritance-token',{parent_id:parentB,child_id:'auth0|child_002'});
+    if(tokenB.ok){state.tokenB=tokenB.data.inheritance_token;showResult('conflict-seed-result',{status:'Second parent vault ready — patterns from Groq AI',scopes:tokenB.data.scopes},'ok');document.getElementById('btn-resolve').disabled=false;AL.log('issue',parentB,'Second parent vault seeded and inheritance token issued for conflict resolution');}
+    else showResult('conflict-seed-result',tokenB.data,'err');
+    setLoading('btn-seed-conflict',false,'🌱 Seed Second Parent Vault');
+}
+
+async function resolveConflict(){
+    if(!state.token||!state.tokenB){alert('Run Inheritance flow (Tab 1) and seed second parent first.');return;}
+    const question=document.getElementById('conflict-question').value.trim(); setLoading('btn-resolve',true);
+    const r=await api('/child/resolve-conflict',{token_a:state.token,token_b:state.tokenB,question});
+    if(!r.ok){showResult('conflict-seed-result',r.data,'err');setLoading('btn-resolve',false,'⚔️ Arbitrate with Claude');return;}
+    document.getElementById('conflict-patterns').style.display='grid';
+    document.getElementById('conflict-patterns-a').innerHTML=r.data.patterns_a.map(p=>`<div class="pattern-card" style="margin-bottom:6px;"><div class="p-id">${p.id}</div><div class="p-title">${p.principle}</div><div class="p-insight">${p.insight}</div></div>`).join('');
+    document.getElementById('conflict-patterns-b').innerHTML=r.data.patterns_b.map(p=>`<div class="pattern-card" style="margin-bottom:6px;"><div class="p-id">${p.id}</div><div class="p-title">${p.principle}</div><div class="p-insight">${p.insight}</div></div>`).join('');
+    AL.log('validate','arbiter',`Conflict resolution: two parent vaults queried for question: "${question.substring(0,55)}…"`);
+    const prompt=`You are a wisdom arbitrator. Two parents left conflicting guidance.\n\nParent A (mission-driven):\n${JSON.stringify(r.data.patterns_a,null,2)}\n\nParent B (stability-first):\n${JSON.stringify(r.data.patterns_b,null,2)}\n\nQuestion: "${question}"\n\n1. Name the core tension. 2. Each parent's perspective. 3. A synthesis honouring both. 3 paragraphs. Address the child directly.`;
+    try{const text=await aiChat(prompt);const box=document.getElementById('conflict-advice');box.textContent=text;box.classList.add('show');}
+    catch(err){showResult('conflict-seed-result',`AI error: ${err.message}`,'err');}
+    setLoading('btn-resolve',false,'⚔️ Arbitrate with Claude');
+}
+
+async function refreshLineage(){
+    if(!state.parentId&&!state.token)return;
+    const qs=state.token?`token=${encodeURIComponent(state.token)}`:`parent_id=${encodeURIComponent(state.parentId)}`;
+    const r=await apiGet(`/vault/lineage?${qs}`);
+    if(r.ok&&r.data.nodes?.length)renderLineageTree(r.data);
+}
+
+function renderLineageTree(graph){
+    const svg=document.getElementById('lineage-svg');svg.innerHTML='';
+    const W=760,LEVEL_H=110,NODE_W=170,NODE_H=52,RX=8;
+    const colors={parent:'#c9a227',child:'#22c55e',advisor:'#60a5fa'};
+    const bgs={parent:'#1a1000',child:'#052e16',advisor:'#0a1a2e'};
+    const levels={};
+    for(const n of graph.nodes){const d=n.depth+1;if(!levels[d])levels[d]=[];levels[d].push(n);}
+    const nodePos={};
+    for(const[lvl,nodes]of Object.entries(levels)){const y=parseInt(lvl)*LEVEL_H+20;const totalW=nodes.length*(NODE_W+20)-20;let x=(W-totalW)/2;for(const n of nodes){nodePos[n.id]={x,y};x+=NODE_W+20;}}
+    for(const e of graph.edges){const from=nodePos[e.from],to=nodePos[e.to];if(!from||!to)continue;const x1=from.x+NODE_W/2,y1=from.y+NODE_H,x2=to.x+NODE_W/2,y2=to.y,mx=(x1+x2)/2,my=(y1+y2)/2;const line=document.createElementNS('http://www.w3.org/2000/svg','path');line.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);line.setAttribute('fill','none');line.setAttribute('stroke','#2a2a3e');line.setAttribute('stroke-width','2');svg.appendChild(line);if(e.scopes?.length){const txt=document.createElementNS('http://www.w3.org/2000/svg','text');txt.setAttribute('x',mx+6);txt.setAttribute('y',my);txt.setAttribute('font-size','9');txt.setAttribute('fill','#6b7280');txt.textContent=e.scopes.slice(0,2).join(', ')+(e.scopes.length>2?'…':'');svg.appendChild(txt);}}
+    for(const n of graph.nodes){const pos=nodePos[n.id];if(!pos)continue;const color=colors[n.type]||'#6b7280',bg=bgs[n.type]||'#12121e';const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');rect.setAttribute('x',pos.x);rect.setAttribute('y',pos.y);rect.setAttribute('width',NODE_W);rect.setAttribute('height',NODE_H);rect.setAttribute('rx',RX);rect.setAttribute('fill',bg);rect.setAttribute('stroke',color);rect.setAttribute('stroke-width','1.5');svg.appendChild(rect);const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');lbl.setAttribute('x',pos.x+NODE_W/2);lbl.setAttribute('y',pos.y+18);lbl.setAttribute('text-anchor','middle');lbl.setAttribute('font-size','11');lbl.setAttribute('fill',color);lbl.setAttribute('font-weight','bold');lbl.textContent=(n.label||n.id).substring(0,20);svg.appendChild(lbl);const type=document.createElementNS('http://www.w3.org/2000/svg','text');type.setAttribute('x',pos.x+NODE_W/2);type.setAttribute('y',pos.y+31);type.setAttribute('text-anchor','middle');type.setAttribute('font-size','9');type.setAttribute('fill','#6b7280');type.textContent=n.type.toUpperCase();svg.appendChild(type);if(n.scopes?.length){const sc=document.createElementNS('http://www.w3.org/2000/svg','text');sc.setAttribute('x',pos.x+NODE_W/2);sc.setAttribute('y',pos.y+44);sc.setAttribute('text-anchor','middle');sc.setAttribute('font-size','8');sc.setAttribute('fill',color);sc.textContent=n.scopes.slice(0,3).join(' · ');svg.appendChild(sc);}}
+}
+
+async function importFromGitHub(){
+    const username=document.getElementById('gh-username').value.trim(); const token=document.getElementById('gh-token').value.trim();
+    if(!username){alert('GitHub username is required.');return;}
+    setLoading('btn-github',true); document.getElementById('github-patterns-output').innerHTML=''; document.getElementById('github-result').className='result-box';
+    AL.log('issue',username,`GitHub token submitted to Token Vault — fetching public commit history for "${username}"`);
+    const r=await api('/vault/ingest-github',{user_id:state.parentId||'auth0|parent_001',github_username:username,github_token:token||'demo'});
+    if(!r.ok||!r.data.commits?.length){showResult('github-result',r.data.error||'No public commits found.','err');AL.log('block',username,'GitHub import failed: '+(r.data.error||'no commits'));setLoading('btn-github',false,'🐙 Import Commits');return;}
+    showResult('github-result',{commit_count:r.data.commit_count,github_token_stored:true,note:'Token stored in vault — not returned'},'info');
+    AL.log('validate',username,`${r.data.commit_count} commits fetched — GitHub token stored in vault, never returned.`);
+    if(r.data.patterns?.length){renderPatterns(r.data.patterns,'github-patterns-output');state.patterns=r.data.patterns;AL.log('issue','groq-ai',`Engineering wisdom extracted from ${username}'s commits — ${r.data.patterns.length} patterns`);}
+    else showResult('github-result','Commits fetched but AI extraction failed — check GROQ_API_KEY.','err');
+    setLoading('btn-github',false,'🐙 Import Commits');
+}
+
+async function runFullDemo(){
+    const btn=document.getElementById('demo-btn'); btn.disabled=true; btn.textContent='⏳ Running…';
+    switchTab('main'); const pause=ms=>new Promise(r=>setTimeout(r,ms));
+    await extractWisdom(); await pause(600);
+    await depositToVault(); await pause(400);
+    await confirmTrustee(1); await pause(300);
+    await confirmTrustee(2); await pause(400);
+    await issueToken(); await pause(600);
+    await queryWisdom(); await pause(400);
+    await attemptRawAccess(); await pause(400);
+    switchTab('delegation'); await delegateToken(); await pause(500); await queryWithDelegation(); await pause(400);
+    switchTab('conflict'); await seedConflictParent(); await pause(500); await resolveConflict(); await pause(400);
+    switchTab('lineage'); await refreshLineage(); await pause(400);
+    switchTab('audit');
+    btn.disabled=false; btn.textContent='↺ Run Again';
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+.env
+keys/private_key.pem
+keys/public_key.pem
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+.claude/
