@@ -8,6 +8,18 @@ The child can ask for guidance rooted in how their parent actually lived and dec
 
 ---
 
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+[![Auth0](https://img.shields.io/badge/Auth0-Token%20Vault-EB5424?style=flat-square&logo=auth0&logoColor=white)](https://auth0.com)
+[![JWT](https://img.shields.io/badge/JWT-PyJWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)](https://pyjwt.readthedocs.io)
+[![Claude](https://img.shields.io/badge/Claude-Anthropic-D97706?style=flat-square)](https://anthropic.com)
+
+[![Hackathon](https://img.shields.io/badge/Hackathon-Auth0%20for%20AI%20Agents-7C3AED?style=flat-square)](https://github.com/SantoshAdabala/TheInheritableAgent)
+[![Last Commit](https://img.shields.io/github/last-commit/SantoshAdabala/TheInheritableAgent?style=flat-square&color=64748B)](https://github.com/SantoshAdabala/TheInheritableAgent/commits/main)
+[![Stars](https://img.shields.io/github/stars/SantoshAdabala/TheInheritableAgent?style=flat-square&color=FBBF24)](https://github.com/SantoshAdabala/TheInheritableAgent/stargazers)
+
+---
+
 ## Features
 
 - **Wisdom extraction** — Claude distills life decisions into anonymous behavioral patterns. Raw input never leaves the browser.
@@ -35,45 +47,3 @@ python app.py
 ```
 
 Open `http://127.0.0.1:5000`.
-
----
-
-## Environment Variables
-
-| Variable | Description |
-|---|---|
-| `AUTH0_DOMAIN` | Your Auth0 tenant domain |
-| `AUTH0_CLIENT_ID` | Application client ID |
-| `GROQ_API_KEY` | Free API key from console.groq.com |
-| `FLASK_SECRET_KEY` | Any long random string |
-
-Without Auth0 credentials the app runs in demo mode using locally signed RSA JWTs. All scope enforcement still applies.
-
----
-
-## Auth0 Setup
-
-1. Create a **Regular Web Application** in Auth0 (not SPA, not Native)
-2. Advanced Settings → Grant Types → enable **Token Vault**
-3. Advanced Settings → Application Authentication → select **Private Key JWT**
-4. Run the app once to auto-generate `keys/public_key.pem`, then register it under Advanced Settings → Keys
-5. Auth0 Management API → authorize your app with `read:users` and `update:users`
-
----
-
-## How It Works
-
-The inheritance token is a signed JWT with explicit scope grants and denials baked in at issuance:
-
-```
-scope: wisdom:read wisdom:career wisdom:finance ...
-denied_scopes: raw_data:access personal_history:read
-```
-
-The child presents this token to fetch patterns. The server validates it, filters patterns by the granted scopes, and returns only what the token allows. Attempting to access raw data always returns 403 — not because the app checks a flag, but because the scope was denied at the identity layer.
-
----
-
-## License
-
-MIT
